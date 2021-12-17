@@ -1,17 +1,10 @@
-variable "client_id" {
+variable "arm_client_id" {
 	type = string
 }
 
-variable "client_secret" {
+variable "arm_client_secret" {
 	type = string
-}
-
-variable "resource_group_name" {
-	type = string
-}
-
-variable "storage_account" {
-	type = string
+	sensitive = true
 }
 
 variable "arm_subscription_id" {
@@ -22,6 +15,21 @@ variable "arm_tenant_id" {
 	type = string
 }
 
+variable "location" {
+	type = string
+}
+
+variable "build_resource_group_name" {
+	type = string
+}
+
+variable "artifact_resource_group_name" {
+	type = string
+}
+
+variable "storage_account_name" {
+	type = string
+}
 
 variable "os_type" {
 	type = string
@@ -43,24 +51,16 @@ variable "image_sku" {
 	default = "18.04-LTS"
 }
 
-variable "location" {
-	type = string
-}
-
 variable "vm_size" {
 	type = string
 	default = "Standard_D4s_v3"
-}
-
-variable "arm_subscription_id" {
-	type = string
 }
 
 variable "shared_image_gallery_resource_group_name" {
 	type = string
 }
 
-variable "gallery_name" {
+variable "shared_image_gallery_name" {
 	type = string
 }
 
@@ -72,24 +72,21 @@ variable "shared_image_version" {
 	type = string
 }
 
-variable "managed_image_name" {
-	type = string
-}
-
 variable "managed_image_resource_group_name" {
 	type = string
 }
 
-source "azure-arm" "basic-example" {
-  client_id = var.client_id
-  client_secret = var.client_secret 
-  resource_group_name = var.resource_group_name 
-  storage_account = var.storage_account 
-  subscription_id = var.subscription_id 
-  tenant_id = var.tenant_id 
+variable "managed_image_name" {
+	type = string
+}
 
-  capture_container_name = "images"
-  capture_name_prefix = "packer"
+source "azure-arm" "basic-example" {
+  client_id = var.arm_client_id
+  client_secret = var.arm_client_secret 
+  subscription_id = var.arm_subscription_id 
+  tenant_id = var.arm_tenant_id
+  resource_group_name = var.artifact_resource_group_name 
+  storage_account = var.storage_account_name
 
   os_type = var.os_type
   image_publisher = var.image_publisher
@@ -97,18 +94,21 @@ source "azure-arm" "basic-example" {
   image_sku = var.image_sku
 
   location = var.location
+	build_resource_group_name = var.build_resource_group_name
   vm_size = var.vm_size
-
-	shared_image_gallery {	
-    subscription = var.arm_subscription_id
-    resource_group = var.shared_image_gallery_resource_group_name
-    gallery_name = var.gallery_name
-    image_name = var.shared_image_name
-    image_version = var.shared_image_version
-	}
 
 	managed_image_name = var.managed_image_name
 	managed_image_resource_group_name = var.managed_image_resource_group_name
+
+	shared_image_gallery_destination  {	
+    subscription = var.arm_subscription_id
+    resource_group = var.shared_image_gallery_resource_group_name
+    gallery_name = var.shared_image_gallery_name
+    image_name = var.shared_image_name
+    image_version = var.shared_image_version
+		replication_regions var.shared_image_replication_regions
+		storage_account_type = "Standard_LRS" 
+	}
 }
 
 build {

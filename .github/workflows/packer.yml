@@ -1,0 +1,61 @@
+name: 'Packer Build Pipeline'
+
+on:
+  #Manually trigger workflow runs
+  workflow_dispatch:
+  push:
+    branches:
+    - test
+
+jobs:
+  build:
+    name: Build Packer Image
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+      - uses: actions/checkout@v2
+  
+      - name: Validate Template
+        uses: hashicorp/packer-github-actions@v0.2.0
+        with:
+          command: validate
+          arguments: -syntax-only
+          target: src/packer.pkr.hcl
+
+      - name: Build Image
+        # You may pin to the exact commit or the version.
+        # uses: hashicorp/packer-github-actions@2ef5cf325f2beace99a1742903eb52542765c08f
+        uses: hashicorp/packer-github-actions@v0.2.0
+        with:
+          # command to execute
+          command: build
+          # arguments for command
+          arguments: "-color=false -on-error=abort"
+          # file(s) to target
+          target: src/packer.pkr.hcl
+        env:
+          VAR_PKR_arm_client_id: ${{secrets.ARM_CLIENT_ID}}
+          VAR_PKR_arm_client_secret: ${{secrets.ARM_CLIENT_SECRET}}
+          VAR_PKR_arm_subscription_id: ${{secrets.ARM_SUBSCRIPTION_ID}}
+          VAR_PKR_arm_tenant_id: ${{secrets.ARM_TENANT_ID}}
+          VAR_PKR_location: ${{}}
+          VAR_PKR_build_resource_group_name: ${{secrets.BUILD_RESOURCE_GROUP_NAME}}
+          VAR_PKR_artifact_resource_group_name: ${{secrets.ARTIFACT_RESOURCE_GROUP_NAME}}
+          VAR_PKR_storage_account_name: ${{secrets.STORAGE_ACCOUNT_NAME}}
+          
+          VAR_PKR_shared_image_gallery_resource_group_name: ${{secrets.SHARED_IMAGE_GALLERY_RESOURCE_GROUP_NAME}}
+          VAR_PKR_shared_image_gallery_name: ${{secrets.SHARED_IMAGE_GALLERY_NAME}}
+          VAR_PKR_shared_image_name: ${{}}
+          VAR_PKR_shared_image_version: ${{}}
+
+          VAR_PKR_managed_image_resource_group_name: ${{secrets.MANAGED_IMAGE_RESOURCE_GROUP_NAME}}
+          VAR_PKR_managed_image_name: ${{secrets.MANGED_IMAGE_NAME}}
+
+          VAR_PKR_os_type: Linux
+          VAR_PKR_image_publisher: Canonical
+          VAR_PKR_image_offer: UbuntuServer
+          VAR_PKR_image_sku: 18.04-LTS
+          VAR_PKR_vm_size: Standard_D4s_v3
+          
+          
